@@ -16,5 +16,5 @@ variable "admin_username" {
 variable "admin_password" {
   description = "Admin password for Windows VM"
   default     = "Passw0rd1234!"
-  sensitive   = true
+  sensitive   = false
 }
