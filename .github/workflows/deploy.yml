@@ -1,4 +1,4 @@
-name: Deploy Azure VM with Terraform
+name: Deploy Windows VM with Terraform
 
 on:
     push:
@@ -34,7 +34,7 @@ jobs:
               run: terraform validate
 
             - name: Terraform Plan
-              run: terraform plan -out=tfplan
+              run: terraform plan -out=tfplan -var "admin_password=${{ secrets.ADMIN_PASSWORD }}"
 
             - name: Terraform Apply
               run: terraform apply -auto-approve tfplan
