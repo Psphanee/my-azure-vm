@@ -1,11 +1,11 @@
 variable "resource_group_name" {
   description = "Name of the resource group"
-  default     = "rg-terraform-windowsvm"
+  default     = "rg-windowsvm"
 }
 
 variable "location" {
   description = "Azure region"
-  default     = "West Europe"
+  default     = "Central US"
 }
 
 variable "admin_username" {
