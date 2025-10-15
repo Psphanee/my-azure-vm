@@ -1,11 +1,11 @@
 variable "resource_group_name" {
   description = "Name of the resource group"
-  default     = "rg-windowsvm"
+  default     = "rg-windowsvm2"
 }
 
 variable "location" {
   description = "Azure region"
-  default     = "Central US"
+  default     = "East US2"
 }
 
 variable "admin_username" {
