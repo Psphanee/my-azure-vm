@@ -38,3 +38,8 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.destroy == 'true' }} # optional conditional
+        run: |
+          terraform destroy -auto-approve -var "admin_password=${{ secrets.ADMIN_PASSWORD }}"
