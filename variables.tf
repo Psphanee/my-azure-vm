@@ -1,4 +1,19 @@
+variable "resource_group_name" {
+  description = "Name of the resource group"
+  default     = "rg-terraform-windowsvm"
+}
+
 variable "location" {
-  description = "Azure region to deploy"
-  default     = "East US"
+  description = "Azure region"
+  default     = "East US 2" # can change if needed
+}
+
+variable "admin_username" {
+  description = "Admin username for Windows VM"
+  default     = "azureuser"
+}
+
+variable "admin_password" {
+  description = "Admin password for Windows VM"
+  sensitive   = true
 }

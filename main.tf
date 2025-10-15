@@ -2,42 +2,75 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~>3.0"
     }
   }
-
-  required_version = ">= 1.6.0"
+  required_version = ">= 1.3.0"
 }
 
 provider "azurerm" {
   features {}
 }
 
-# 1️⃣ Resource Group
+# Resource Group
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-private-vm-demo"
-  location = "East US"
+  name     = var.resource_group_name
+  location = var.location
 }
 
-# 2️⃣ Virtual Network
+# Virtual Network
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-private"
+  name                = "myVNet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-# 3️⃣ Subnet
+# Subnet
 resource "azurerm_subnet" "subnet" {
-  name                 = "subnet-internal"
+  name                 = "mySubnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# 4️⃣ Network Interface (NO public IP)
+# Network Security Group (allow RDP)
+resource "azurerm_network_security_group" "nsg" {
+  name                = "myNSG"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "RDP"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+# Associate NSG with subnet
+resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+# Public IP (Standard SKU)
+resource "azurerm_public_ip" "public_ip" {
+  name                = "myPublicIP"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Dynamic"
+  sku                 = "Standard"
+}
+
+# Network Interface
 resource "azurerm_network_interface" "nic" {
-  name                = "nic-private-vm"
+  name                = "myNIC"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
@@ -45,23 +78,23 @@ resource "azurerm_network_interface" "nic" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
-    # Note: No public_ip_address_id attached
+    public_ip_address_id          = azurerm_public_ip.public_ip.id
   }
 }
 
-# 5️⃣ Virtual Machine
+# Windows Virtual Machine
 resource "azurerm_windows_virtual_machine" "vm" {
-  name                = "private-vm"
+  name                = "myWindowsVM"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   size                = "Standard_B2s"
-  admin_username      = "azureuser"
-  admin_password      = "P@ssword12345!"
-  network_interface_ids = [
-    azurerm_network_interface.nic.id
-  ]
+  admin_username      = var.admin_username
+  admin_password      = var.admin_password
+
+  network_interface_ids = [azurerm_network_interface.nic.id]
 
   os_disk {
+    name                 = "myOSDisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
@@ -69,12 +102,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
-    sku       = "2022-datacenter-azure-edition"
+    sku       = "2019-Datacenter"
     version   = "latest"
-  }
-
-  # Optional: disable boot diagnostics (to simplify)
-  boot_diagnostics {
-    storage_account_uri = null
   }
 }

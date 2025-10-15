@@ -1,4 +1,4 @@
-output "private_ip" {
-  description = "Private IP of the VM"
-  value       = azurerm_network_interface.nic.private_ip_address
+output "vm_public_ip" {
+  description = "Public IP address of the Windows VM"
+  value       = azurerm_public_ip.public_ip.ip_address
 }
